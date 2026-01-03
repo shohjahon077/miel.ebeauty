@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miel Beauty | Premium Kosmetika</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* O'zgaruvchilar */
+        :root {
+            --accent: #d4af37; /* Oltin rang */
+            --bg: #ffffff;
+        }
+        
+        /* Asosiy stil */
+        body { 
+            background: var(--bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #121212;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Serif font */
+        .serif {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        /* Yuklash ekrani */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Mahsulot kartasi */
+        .product-card {
+            background: #fff;
+            border-radius: 32px;
+            padding: 12px;
+            border: 1px solid rgba(0,0,0,0.04);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .product-card:active {
+            transform: scale(0.96);
+        }
+        
+        /* Savatga animatsiya */
+        .fly-item {
+            position: fixed;
+            z-index: 999;
+            pointer-events: none;
+            width: 100px;
+            height: 100px;
+            border-radius: 24px;
+            object-fit: cover;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        /* Savat oynasi */
+        #cart-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            z-index: 100;
+            transform: translateX(100%);
+            transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1);
+            box-shadow: -20px 0 60px rgba(0,0,0,0.05);
+        }
+        
+        #cart-drawer.active {
+            transform: translateX(0);
+        }
+        
+        /* Instagram tugmasi */
+        .instagram-btn {
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            transition: 0.3s;
+        }
+        
+        .instagram-btn:hover {
+            opacity: 0.7;
+        }
+        
+        /* Buyurtma modal oynasi */
+        .modal-box {
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        
+        .modal-active .modal-box {
+            transform: translateY(0);
+        }
+        
+        /* Animatsiya klassi */
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Yuklash ekrani -->
+<div id="loader">
+    <div class="serif text-white text-3xl italic tracking-[0.3em] mb-4 animate-pulse">MIEL BEAUTY</div>
+    <div class="w-16 h-[1px] bg-white/20 relative">
+        <div id="loader-bar" class="absolute h-full bg-[#d4af37] w-0"></div>
+    </div>
+</div>
+
+<!-- Navigatsiya paneli -->
+<nav class="fixed top-0 w-full z-50 py-5 px-6 flex justify-between items-center bg-white/70 backdrop-blur-xl border-b border-gray-50">
+    <div class="serif text-2xl font-bold tracking-tight">MIEL BEAUTY</div>
+    <button onclick="toggleCart(true)" id="cart-btn" class="relative p-3 bg-black text-white rounded-full active:scale-90 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+        </svg>
+        <span id="cart-count" class="absolute -top-1 -right-1 bg-[#d4af37] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">0</span>
+    </button>
+</nav>
+
+<!-- Sarlavha -->
+<header class="pt-36 pb-12 px-6 text-center">
+    <h1 class="serif text-6xl md:text-8xl mb-4 leading-none tracking-tighter" id="hero-text">Tabiiy <br><span class="italic text-[#d4af37]">Go'zallik.</span></h1>
+    <p class="text-gray-400 text-[10px] uppercase tracking-[0.5em] opacity-0" id="hero-sub">Premium Kosmetika Koleksiyasi</p>
+</header>
+
+<!-- Mahsulotlar gridi -->
+<div id="products-grid" class="container mx-auto px-4 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10 pb-32"></div>
+
+<!-- Savat fon qorong'iligi -->
+<div id="overlay" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[90] hidden" onclick="toggleCart(false)"></div>
+
+<!-- Savat oynasi -->
+<div id="cart-drawer" class="flex flex-col">
+    <div class="p-8 border-b flex justify-between items-center">
+        <h2 class="serif text-3xl">Savat</h2>
+        <button onclick="toggleCart(false)" class="text-4xl font-light">&times;</button>
+    </div>
+    <div id="cart-items" class="flex-1 overflow-y-auto p-8 space-y-6"></div>
+    <div class="p-8 bg-gray-50 border-t">
+        <div class="flex justify-between text-xl font-bold mb-6">
+            <span>Umumiy:</span>
+            <span id="total-price">0 so'm</span>
+        </div>
+        <button onclick="openOrderModal()" class="w-full bg-black text-white py-5 rounded-[20px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition">Buyurtma berish</button>
+    </div>
+</div>
+
+<!-- Buyurtma formasi modal oynasi -->
+<div id="order-modal" class="fixed inset-0 z-[110] hidden flex items-end md:items-center justify-center p-0 md:p-4 bg-black/50 backdrop-blur-md">
+    <div class="modal-box bg-white w-full max-w-lg rounded-t-[40px] md:rounded-[40px] p-10">
+        <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-8 md:hidden"></div>
+        <h2 class="serif text-3xl mb-8">Buyurtma ma'lumotlari</h2>
+        <form id="order-form" class="space-y-4">
+            <input type="text" id="customer-name" placeholder="Ismingiz" required class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#d4af37] border-none">
+            <input type="tel" id="customer-phone" placeholder="Telefon raqami" required class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#d4af37] border-none">
+            <input type="text" id="customer-address" placeholder="Manzil" required class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-[#d4af37] border-none">
+            <textarea id="customer-message" placeholder="Qo'shimcha izoh..." class="w-full p-4 bg-gray-50 rounded-2xl outline-none h-24 focus:ring-2 focus:ring-[#d4af37] border-none"></textarea>
+            <button type="submit" id="submit-btn" class="w-full bg-[#d4af37] text-white py-5 rounded-2xl font-bold uppercase tracking-widest shadow-lg shadow-[#d4af37]/20">Buyurtmani tasdiqlash</button>
+        </form>
+    </div>
+</div>
+<!-- Footer (pastki qism) -->
+<footer class="py-16 text-center border-t border-gray-50">
+    <p class="text-[10px] text-gray-400 uppercase tracking-[0.3em] mb-2">Yaratuvchi: <span class="text-black font-semibold">Shohjahon Mahkamov</span></p>
+    <a href="https://instagram.com/shohcore12" target="_blank" class="instagram-btn text-xs inline-flex items-center">
+        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849s-.011 3.584-.069 4.849c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.849-.07c-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849s.012-3.584.07-4.849c.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98.058-1.28.072-1.689.072-4.947s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98-1.28-.058-1.689-.072-4.948-.072z"/>
+        </svg>
+        @shohcore12
+    </a>
+</footer>
+
+<script>
+    // ==================== SOZLAMALAR ====================
+    // Telegram bot sozlamalari (o'zingizning ma'lumotlaringizni qo'ying)
+    const TELEGRAM_BOT_TOKEN = "8055090268:AAHtu9cy9lnZw_GFZqo8mc860Bj9G3H7vOU";
+    const TELEGRAM_CHAT_ID = "8136720315";
+
+    // ==================== MAHSULOTLAR RO'YXATI ====================
+    // BU YERNI O'ZGARTIRISHINGIZ MUMKIN
+    
+    const products = [
+        {
+            id: 1,
+            name: "Tabiiy Namlovchi Krem",
+            price: 75000,
+            img: "photo_1_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 2,
+            name: "Gul Suvi Tonik",
+            price: 55000,
+            img: "photo_2_2026-01-04_01-13-10.jpg"
+        },
+        {
+            id: 3,
+            name: "Vitamin C Serum",
+            price: 120000,
+            img: "photo_3_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 4,
+            name: "Qorako'l Tana Yog'i",
+            price: 85000,
+            img: "photo_4_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 5,
+            name: "Argan Yog'i",
+            price: 95000,
+            img: "photo_5_2026-01-04_01-13-10.jpg"
+        },
+        {
+            id: 6,
+            name: "Choy Daraxti Yuz Kremi",
+            price: 110000,
+            img: "photo_6_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 7,
+            name: "Gidratlovchi Mask",
+            price: 65000,
+            img: "photo_7_2026-01-04_01-13-10.jpg"
+        },
+        {
+            id: 8,
+            name: "Ko'z Atrofi Kremi",
+            price: 89000,
+            img: "photo_8_2026-01-04_01-13-10.jpg"
+        },
+        {
+            id: 9,
+            name: "Ko'z Atrofi Kremi",
+            price: 89000,
+            img: "photo_9_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 10,
+            name: "Ko'z Atrofi Kremi",
+            price: 89000,
+            img: "photo_10_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 11,
+            name: "Ko'z Atrofi Kremi",
+            price: 89000,
+            img: "photo_11_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 12,
+            name: "Ko'z Atrofi Kremi",
+            price: 89000,
+            img: "photo_12_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 13,
+            name: "Ko'z Atrofi Kremi",
+            price: 89000,
+            img: "photo_13_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 14,
+            name: "Ko'z Atrofi Kremi",
+            price: 89000,
+            img: "photo_14_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 15,
+            name: "Ko'z Atrofi Kremi",
+            price: 89000,
+            img: "photo_15_2026-01-04_01-12-49.jpg"
+        },
+        {
+            id: 16,
+            name: "Ko'z Atrofi Kremi",
+            price: 89000,
+            img: "photo_16_2026-01-04_01-13-10.jpg"
+        }
+        
+    ];
+
+    // ==================== O'ZGARUVCHILAR ====================
+    let shoppingCart = []; // Savatdagi mahsulotlar
+    let isCartOpen = false; // Savat ochiq yoki yopiq
+
+    // ==================== SAHIFA YUKLANGANDA ====================
+    window.addEventListener('load', () => {
+        // Yuklash animatsiyasi
+        gsap.to("#loader-bar", {
+            width: "100%",
+            duration: 1.2,
+            ease: "power2.inOut"
+        });
+        
+        gsap.to("#loader", {
+            y: "-100%",
+            duration: 1,
+            delay: 1.4,
+            ease: "expo.inOut"
+        });
+        
+        gsap.from("#hero-text", {
+            opacity: 0,
+            y: 80,
+            duration: 1.2,
+            delay: 1.8,
+            ease: "power4.out"
+        });
+        
+        gsap.to("#hero-sub", {
+            opacity: 1,
+            duration: 1,
+            delay: 2.2
+        });
+        
+        // Mahsulotlarni ekranga chiqarish
+        displayProducts();
+    });
+
+    // ==================== FUNKSIYALAR ====================
+
+    // Mahsulotlarni ekranga chiqarish
+    function displayProducts() {
+        const grid = document.getElementById('products-grid');
+        
+        products.forEach((product, index) => {
+            const card = document.createElement('div');
+            card.className = "product-card opacity-0 translate-y-12";
+            
+            card.innerHTML = `
+                <div class="overflow-hidden rounded-[24px] mb-4 aspect-[4/5]">
+                    <img src="${product.img}" 
+                         alt="${product.name}" 
+                         id="product-image-${product.id}" 
+                         class="w-full h-full object-cover">
+                </div>
+                <h3 class="font-bold text-sm mb-1 truncate">${product.name}</h3>
+                <p class="text-[#d4af37] font-bold text-sm mb-4">${product.price.toLocaleString()} so'm</p>
+                <button onclick="addToCartWithAnimation(this, ${product.id})" 
+                        class="w-full bg-black text-white py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest active:scale-95 transition">
+                    Savatga qo'shish
+                </button>
+            `;
+            
+            grid.appendChild(card);
+            
+            // Karta animatsiyasi
+            gsap.to(card, {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                delay: 2 + (index * 0.1)
+            });
+        });
+    }
+
+    // Savatga mahsulot qo'shish (animatsiya bilan)
+    function addToCartWithAnimation(button, productId) {
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+        
+        const productImage = document.getElementById(`product-image-${productId}`);
+        const cartButton = document.getElementById('cart-btn');
+        
+        // Rasm koordinatalari
+        const imageRect = productImage.getBoundingClientRect();
+        const cartRect = cartButton.getBoundingClientRect();
+        
+        // Klon rasm yaratish
+        const flyingImage = productImage.cloneNode();
+        flyingImage.className = 'fly-item';
+        flyingImage.style.position = 'fixed';
+        flyingImage.style.top = imageRect.top + 'px';
+        flyingImage.style.left = imageRect.left + 'px';
+        flyingImage.style.width = imageRect.width + 'px';
+        flyingImage.style.height = imageRect.height + 'px';
+        
+        document.body.appendChild(flyingImage);
+        
+        // Animatsiya
+        const animationTimeline = gsap.timeline();
+        
+        animationTimeline
+            .to(flyingImage, {
+                scale: 1.3,
+                rotation: 10,
+                duration: 0.3,
+                ease: "back.out(2)"
+            })
+            .to(flyingImage, {
+                x: cartRect.left - imageRect.left - 20,
+                y: cartRect.top - imageRect.top - 20,
+                scale: 0.1,
+                rotation: 720,
+                opacity: 0,
+                duration: 0.8,
+                ease: "power3.inOut"
+            })
+            .add(() => {
+                // Animatsiya tugagach
+                flyingImage.remove();
+                
+                // Savatga qo'shish
+                shoppingCart.push(product);
+                updateCartDisplay();
+                
+                // Savat tugmasi animatsiyasi
+                gsap.fromTo("#cart-btn", 
+                    { scale: 0.7 }, 
+                    { scale: 1, duration: 0.6, ease: "elastic.out(1, 0.3)" }
+                );
+            });
+    }
+
+    // Savatni yangilash
+    function updateCartDisplay() {
+        // Mahsulotlar soni
+        document.getElementById('cart-count').textContent = shoppingCart.length;
+        
+        // Savatdagi mahsulotlar ro'yxati
+        const cartItemsContainer = document.getElementById('cart-items');
+        
+        if (shoppingCart.length === 0) {
+            cartItemsContainer.innerHTML = `
+                <div class="text-center py-12 text-gray-400">
+                    <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <p>Savat bo'sh</p>
+                </div>
+            `;
+        } else {
+            cartItemsContainer.innerHTML = shoppingCart.map((item, index) => `
+                <div class="flex gap-4 items-center bg-gray-50 p-4 rounded-3xl animate-slide-in">
+                    <img src="${item.img}" 
+                         alt="${item.name}" 
+                         class="w-16 h-20 rounded-2xl object-cover">
+                    <div class="flex-1">
+                        <p class="font-bold text-sm">${item.name}</p>
+                        <p class="text-[#d4af37] text-xs font-bold">${item.price.toLocaleString()} so'm</p>
+                    </div>
+                    <button onclick="removeFromCart(${index})" 
+                            class="text-red-400 p-2 text-2xl hover:text-red-600 transition">
+                        &times;
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        // Umumiy summa
+        const totalAmount = shoppingCart.reduce((sum, item) => sum + item.price, 0);
+        document.getElementById('total-price').textContent = totalAmount.toLocaleString() + " so'm";
+    }
+
+    // Savatdan mahsulot olib tashlash
+    function removeFromCart(index) {
+        shoppingCart.splice(index, 1);
+        updateCartDisplay();
+    }
+
+    // Savat oynasini ochish/yopish
+    function toggleCart(shouldOpen) {
+        const cartDrawer = document.getElementById('cart-drawer');
+        const overlay = document.getElementById('overlay');
+        
+        if (shouldOpen) {
+            cartDrawer.classList.add('active');
+            overlay.classList.remove('hidden');
+            isCartOpen = true;
+        } else {
+            cartDrawer.classList.remove('active');
+            overlay.classList.add('hidden');
+            isCartOpen = false;
+        }
+    }
+
+    // Buyurtma modal oynasini ochish
+    function openOrderModal() {
+        if (shoppingCart.length === 0) {
+            alert("Iltimos, avval savatga mahsulot qo'shing!");
+            return;
+        }
+        
+        const modal = document.getElementById('order-modal');
+        modal.classList.remove('hidden');
+        
+        setTimeout(() => {
+            modal.classList.add('modal-active');
+        }, 10);
+    }
+
+    // Buyurtma modal oynasini yopish
+    function closeOrderModal() {
+        const modal = document.getElementById('order-modal');
+        modal.classList.remove('modal-active');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 500);
+    }
+
+    // ==================== TELEGRAMGA XABAR YUBORISH ====================
+    document.getElementById('order-form').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        const submitButton = document.getElementById('submit-btn');
+        const originalButtonText = submitButton.textContent;
+        
+        // Tugma matnini o'zgartirish
+        submitButton.textContent = "Yuborilmoqda...";
+        submitButton.disabled = true;
+        
+        // Ma'lumotlarni yig'ish
+        const name = document.getElementById('customer-name').value;
+        const phone = document.getElementById('customer-phone').value;
+        const address = document.getElementById('customer-address').value;
+        const message = document.getElementById('customer-message').value;
+        
+        // Savatdagi mahsulotlar ro'yxati
+        const cartItemsText = shoppingCart.map((item, index) => 
+            `${index + 1}. ${item.name} - ${item.price.toLocaleString()} so'm`
+        ).join('\n');
+        
+        const totalAmount = shoppingCart.reduce((sum, item) => sum + item.price, 0);
+        
+        // Telegramga yuboriladigan xabar
+        const telegramMessage = `
+🎉 *YANGI BUYURTMA  miel.beauty*
+
+👤 *Mijoz:* ${name}
+📞 *Telefon:* ${phone}
+📍 *Manzil:* ${address}
+💬 *Izoh:* ${message || "Yo'q"}
+
+🛒 *Buyurtmalar:*
+${cartItemsText}
+
+💰 *Jami summa:* ${totalAmount.toLocaleString()} so'm
+🕐 *Sana:* ${new Date().toLocaleDateString('uz-UZ')}
+        `;
+        
+        try {
+            // Telegram API orqali xabar yuborish
+            const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: telegramMessage,
+                    parse_mode: 'Markdown'
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.ok) {
+                alert("✅ Buyurtmangiz muvaffaqiyatli qabul qilindi! Tez orada siz bilan bog'lanamiz.");
+                
+                // Savatni tozalash
+                shoppingCart = [];
+                updateCartDisplay();
+                
+                // Formani tozalash
+                document.getElementById('order-form').reset();
+                
+                // Oynalarni yopish
+                closeOrderModal();
+                toggleCart(false);
+            } else {
+                throw new Error('Xabar yuborishda xatolik');
+            }
+            
+        } catch (error) {
+            console.error('Xatolik:', error);
+            alert("❌ Xatolik yuz berdi. Iltimos, keyinroq urinib ko'ring yoki telefon orqali bog'laning.");
+        } finally {
+            // Tugmani asl holatiga qaytarish
+            submitButton.textContent = originalButtonText;
+            submitButton.disabled = false;
+        }
+    });
+
+    // Modal oynasini yopish (foniga bosganda)
+    document.getElementById('order-modal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeOrderModal();
+        }
+    });
+
+    // ==================== QO'SHIMCHA FUNKSIYALAR ====================
+    
+    // ESC tugmasi bilan modalni yopish
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            if (document.getElementById('order-modal').classList.contains('modal-active')) {
+                closeOrderModal();
+            }
+            if (isCartOpen) {
+                toggleCart(false);
+            }
+        }
+    });
+
+</script>
+</body>
+</html>
